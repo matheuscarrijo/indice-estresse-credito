@@ -13,13 +13,11 @@ KEY_EVENTS = {
 
 NORM_LABELS = {
     "minmax":     "Min-Max",
-    "robust":     "Min-Max Robusto (Q10/Q90)",
     "percentile": "Rank Percentil",
 }
 
 NORM_COLORS = {
     "minmax":     "#1f77b4",
-    "robust":     "#d62728",
     "percentile": "#2ca02c",
 }
 
@@ -33,6 +31,11 @@ COMP_COLORS = {
     "C": "#1f77b4",
     "I": "#d62728",
     "Q": "#9467bd",
+}
+
+WINDOW_LABELS = {
+    "expanding": "Janela Expansiva",
+    "rolling":   "Janela Móvel 60m",
 }
 
 
@@ -63,10 +66,10 @@ def _add_events(ax) -> None:
         )
 
 
-# ── figures ───────────────────────────────────────────────────────────────────
+# ── figure builders ───────────────────────────────────────────────────────────
 
-def plot_index_comparison(index_df: pd.DataFrame) -> None:
-    """Figure 01 — three index versions overlaid."""
+def _plot_index_comparison(index_df: pd.DataFrame, window_key: str) -> None:
+    """One figure overlaying the two normalization methods for a given window type."""
     fig, ax = plt.subplots(figsize=(12, 5))
 
     for method, label in NORM_LABELS.items():
@@ -77,18 +80,18 @@ def plot_index_comparison(index_df: pd.DataFrame) -> None:
 
     _style_ax(ax, ylabel="Índice [0 – 1]", ylim=(0, 1.05))
     _add_events(ax)
-    ax.legend(loc="upper left", framealpha=0.9, fontsize=9, edgecolor="#cccccc")
+    ax.legend(loc="lower left", framealpha=0.9, fontsize=9, edgecolor="#cccccc")
     ax.set_title(
-        "Índice de Desconforto Financeiro — Comparação entre Normalizações",
+        f"Índice de Desconforto de Crédito — {WINDOW_LABELS[window_key]}",
         fontsize=12, fontweight="bold", pad=12,
     )
 
     fig.tight_layout()
-    _save(fig, "01_index_comparison.png")
+    _save(fig, f"index_comparison.png", subdir=window_key)
 
 
 def plot_components_raw(components: pd.DataFrame) -> None:
-    """Figure 02 — raw (unnormalized) components."""
+    """Figure — raw (unnormalized) components."""
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
 
     configs = [
@@ -108,11 +111,13 @@ def plot_components_raw(components: pd.DataFrame) -> None:
         fontsize=12, fontweight="bold", y=1.01,
     )
     fig.tight_layout()
-    _save(fig, "02_components_raw.png")
+    _save(fig, "components_raw.png", subdir="general")
 
 
-def _plot_components_normalized(index_df: pd.DataFrame, method: str, fig_num: int) -> None:
-    """Figures 03–05 — normalized components for a single method."""
+def _plot_components_normalized(
+    index_df: pd.DataFrame, method: str, window_key: str
+) -> None:
+    """Three-panel figure with each normalized component for a given method and window."""
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.5), sharey=True)
 
     for ax, comp in zip(axes, ["C", "I", "Q"]):
@@ -129,16 +134,17 @@ def _plot_components_normalized(index_df: pd.DataFrame, method: str, fig_num: in
         ax.set_title(COMP_LABELS[comp], fontsize=10, fontweight="bold")
 
     fig.suptitle(
-        f"Componentes Normalizados — {NORM_LABELS[method]}",
+        f"Componentes Normalizados — {NORM_LABELS[method]} — {WINDOW_LABELS[window_key]}",
         fontsize=12, fontweight="bold", y=1.01,
     )
     fig.tight_layout()
-    _save(fig, f"0{fig_num}_components_{method}.png")
+    _save(fig, f"components_{method}.png", subdir=window_key)
 
 
-def _plot_index_single(index_df: pd.DataFrame, method: str, fig_num: int) -> None:
-    """Figures 06–08 — one index version shown individually."""
-    label = NORM_LABELS[method]
+def _plot_index_single(
+    index_df: pd.DataFrame, method: str, window_key: str
+) -> None:
+    """Single-method index figure for a given window type."""
     fig, ax = plt.subplots(figsize=(12, 5))
 
     ax.plot(
@@ -149,31 +155,139 @@ def _plot_index_single(index_df: pd.DataFrame, method: str, fig_num: int) -> Non
     _style_ax(ax, ylabel="Índice [0 – 1]", ylim=(0, 1.05))
     _add_events(ax)
     ax.set_title(
-        f"Índice de Desconforto Financeiro — {label}",
+        f"Índice de Desconforto de Crédito — {NORM_LABELS[method]} — {WINDOW_LABELS[window_key]}",
         fontsize=12, fontweight="bold", pad=12,
     )
 
     fig.tight_layout()
-    _save(fig, f"0{fig_num}_index_{method}.png")
+    _save(fig, f"index_{method}.png", subdir=window_key)
 
 
-def _save(fig, filename: str) -> None:
-    path = FIGURES_DIR / filename
+# ── base-100 figures ──────────────────────────────────────────────────────────
+
+def _rebase100(s: pd.Series) -> pd.Series:
+    """Rebase a series so that the first non-NaN value equals 100."""
+    first_valid = s.dropna().iloc[0]
+    return (s / first_valid) * 100
+
+
+def plot_components_base100(components: pd.DataFrame) -> None:
+    """Single-panel figure with C, I, Q rebased to 100 at the start of the sample."""
+    fig, ax = plt.subplots(figsize=(12, 5))
+
+    for comp in ["C", "I", "Q"]:
+        rebased = _rebase100(components[comp])
+        ax.plot(
+            rebased.index, rebased.values,
+            label=COMP_LABELS[comp], color=COMP_COLORS[comp], linewidth=1.5,
+        )
+
+    ax.axhline(100, color="grey", linestyle=":", linewidth=0.8, alpha=0.6)
+    base_date = components.index[0].strftime("%b-%Y")
+    _style_ax(ax, ylabel=f"Base 100 = {base_date}")
+    _add_events(ax)
+    ax.legend(loc="lower left", framealpha=0.9, fontsize=9, edgecolor="#cccccc")
+    ax.set_title(
+        f"Componentes do Índice — Evolução Base 100 ({base_date})",
+        fontsize=12, fontweight="bold", pad=12,
+    )
+
+    fig.tight_layout()
+    _save(fig, "components_base100.png", subdir="general")
+
+
+def _plot_index_comparison_base100(
+    index_df: pd.DataFrame, window_key: str
+) -> None:
+    """Overlay both normalisation methods rebased to 100."""
+    fig, ax = plt.subplots(figsize=(12, 5))
+
+    for method, label in NORM_LABELS.items():
+        rebased = _rebase100(index_df[f"index_{method}"])
+        ax.plot(
+            rebased.index, rebased.values,
+            label=label, color=NORM_COLORS[method], linewidth=1.8,
+        )
+
+    ax.axhline(100, color="grey", linestyle=":", linewidth=0.8, alpha=0.6)
+    base_date = index_df[f"index_minmax"].dropna().index[0].strftime("%b-%Y")
+    _style_ax(ax, ylabel=f"Base 100 = {base_date}")
+    _add_events(ax)
+    ax.legend(loc="lower left", framealpha=0.9, fontsize=9, edgecolor="#cccccc")
+    ax.set_title(
+        f"Índice de Desconforto de Crédito — Base 100 — {WINDOW_LABELS[window_key]}",
+        fontsize=12, fontweight="bold", pad=12,
+    )
+
+    fig.tight_layout()
+    _save(fig, "index_comparison_base100.png", subdir=window_key)
+
+
+def _plot_index_single_base100(
+    index_df: pd.DataFrame, method: str, window_key: str
+) -> None:
+    """Single-method index rebased to 100."""
+    fig, ax = plt.subplots(figsize=(12, 5))
+
+    rebased = _rebase100(index_df[f"index_{method}"])
+    ax.plot(
+        rebased.index, rebased.values,
+        color=NORM_COLORS[method], linewidth=1.8,
+    )
+
+    ax.axhline(100, color="grey", linestyle=":", linewidth=0.8, alpha=0.6)
+    base_date = index_df[f"index_{method}"].dropna().index[0].strftime("%b-%Y")
+    _style_ax(ax, ylabel=f"Base 100 = {base_date}")
+    _add_events(ax)
+    ax.set_title(
+        f"Índice de Desconforto de Crédito — {NORM_LABELS[method]} — Base 100 — {WINDOW_LABELS[window_key]}",
+        fontsize=12, fontweight="bold", pad=12,
+    )
+
+    fig.tight_layout()
+    _save(fig, f"index_{method}_base100.png", subdir=window_key)
+
+
+def _save(fig, filename: str, subdir: str = "") -> None:
+    target_dir = FIGURES_DIR / subdir if subdir else FIGURES_DIR
+    target_dir.mkdir(parents=True, exist_ok=True)
+    path = target_dir / filename
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
-    print(f"  {filename}")
+    print(f"  {subdir}/{filename}" if subdir else f"  {filename}")
 
 
 # ── entry point ───────────────────────────────────────────────────────────────
 
-def plot_all(components: pd.DataFrame, index_df: pd.DataFrame) -> None:
-    FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+def plot_all(
+    components: pd.DataFrame,
+    index_expanding: pd.DataFrame,
+    index_rolling: pd.DataFrame,
+) -> None:
     plt.rcParams.update({"font.family": "DejaVu Sans"})
 
     print("Salvando figuras em outputs/figures/:")
-    plot_index_comparison(index_df)
+
+    # Componentes brutos → general/
     plot_components_raw(components)
-    for fig_num, method in enumerate(["minmax", "robust", "percentile"], start=3):
-        _plot_components_normalized(index_df, method, fig_num)
-    for fig_num, method in enumerate(["minmax", "robust", "percentile"], start=6):
-        _plot_index_single(index_df, method, fig_num)
+    plot_components_base100(components)
+
+    # Janela expansiva → expanding/
+    _plot_index_comparison(index_expanding, "expanding")
+    for method in ["minmax", "percentile"]:
+        _plot_components_normalized(index_expanding, method, "expanding")
+    for method in ["minmax", "percentile"]:
+        _plot_index_single(index_expanding, method, "expanding")
+    _plot_index_comparison_base100(index_expanding, "expanding")
+    for method in ["minmax", "percentile"]:
+        _plot_index_single_base100(index_expanding, method, "expanding")
+
+    # Janela móvel 60m → rolling/
+    _plot_index_comparison(index_rolling, "rolling")
+    for method in ["minmax", "percentile"]:
+        _plot_components_normalized(index_rolling, method, "rolling")
+    for method in ["minmax", "percentile"]:
+        _plot_index_single(index_rolling, method, "rolling")
+    _plot_index_comparison_base100(index_rolling, "rolling")
+    for method in ["minmax", "percentile"]:
+        _plot_index_single_base100(index_rolling, method, "rolling")

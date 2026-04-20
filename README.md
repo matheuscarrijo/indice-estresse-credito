@@ -1,6 +1,6 @@
-# Índice de Desconforto Financeiro
+# Índice de Desconforto de Crédito
 
-Este repositório contém o código e a documentação para a construção de um **índice** que captura o nível de desconforto financeiro das famílias brasileiras associado ao uso de crédito.
+Este repositório contém o código e a documentação para a construção de um **índice** que captura o nível de desconforto de crédito das famílias brasileiras.
 
 ## 1. Motivação
 
@@ -36,65 +36,63 @@ Componentes:
 - Crédito pessoal não consignado (código SGS: `20574`)
 - Cartão de crédito rotativo (código SGS: `20587`)
 - Cartão de crédito parcelado (código SGS: `20588`)
-- Total de crédito livre para pessoa física (código SGS: `20570`)
 
 Métrica:
 
-- Participação dessas modalidades no total de crédito livre para pessoa física, expressa como **fração [0, 1]** (e.g., 0,21 = 21% do crédito livre PF alocado em modalidades onerosas)
+- Participação dessas modalidades no total de crédito livre para pessoa física (código SGS: `20570`), expressa como **fração [0, 1]** (e.g., 0,21 = 21% do crédito livre PF alocado em modalidades onerosas)
 
 ## 3. Construção do Índice
 
-### 3.1. Normalização
+### 3.1. Métodos de Normalização
 
-Como as três séries têm escalas distintas, cada componente é normalizado antes da agregação. Todas as normalizações são calculadas sobre a **amostra completa (mar-2011 em diante)**, e o índice é produzido em três versões paralelas — uma por método — para comparação.
+Como as três séries têm escalas distintas, cada componente é normalizado antes da agregação. O índice é produzido em **duas versões paralelas** — uma por método — para comparação.
 
 #### 3.1.1. Min-Max
 
 $$
-x^{norm}_t = \frac{x_t - \min(x)}{\max(x) - \min(x)}
+x^{norm}_t = \frac{x_t - \min_\tau(x)}{\max_\tau(x) - \min_\tau(x)}
 $$
 
-O numerador mede a distância entre o valor atual e o mínimo histórico da série; o denominador é o range total (máximo menos mínimo). O resultado indica **qual fração do range histórico o valor atual representa**: 0 corresponde ao mínimo absoluto da amostra e 1 ao máximo absoluto.
+onde $\min_\tau$ e $\max_\tau$ denotam o mínimo e o máximo calculados sobre a janela de referência $\tau$ (ver seção 3.2). O resultado indica **qual fração do range da janela o valor atual representa**: 0 corresponde ao mínimo da janela e 1 ao máximo.
 
 | | |
 |---|---|
 | **Prós** | Simples; interpretável como proporção do range histórico; linearidade |
 | **Contras** | Sensível a outliers; extremos da pandemia (mínimos artificiais por moratórias e transferências emergenciais) podem distorcer a escala, comprimindo o restante da série |
 
-#### 3.1.2. Min-Max Robusto (Q10/Q90)
+#### 3.1.2. Rank Percentil
 
 $$
-x^{norm}_t = \text{clip}\!\left(\frac{x_t - Q_{10}}{Q_{90} - Q_{10}},\ 0,\ 1\right)
+x^{norm}_t = \frac{|\{s \in \tau : x_s \leq x_t\}|}{|\tau|}
 $$
 
-onde $Q_{10}$ e $Q_{90}$ são os percentis 10 e 90 da série histórica completa, e $\text{clip}(v, 0, 1)$ trunca o valor $v$ ao intervalo $[0, 1]$, isto é, retorna 0 se $v < 0$, 1 se $v > 1$, e $v$ caso contrário.
-
-Funciona como o Min-Max, mas substitui os extremos absolutos (min e max) pelos percentis 10 e 90, que são estatisticamente mais estáveis. O $\text{clip}$ garante que valores abaixo do $Q_{10}$ sejam tratados como 0 ("estresse mínimo normal") e valores acima do $Q_{90}$ como 1 ("estresse elevado"), sem que esses outliers distorçam a escala da faixa central.
+O numerador conta quantas observações da janela de referência $\tau$ são menores ou iguais ao valor atual; $|\tau|$ é o tamanho da janela. O resultado é diretamente o **percentil empírico** de $x_t$ na distribuição da janela: um valor de 0,8 significa que 80% das observações da janela foram iguais ou inferiores ao nível atual.
 
 | | |
 |---|---|
-| **Prós** | Robusto a outliers (Q10/Q90 são muito mais estáveis que min/max); preserva linearidade e informação de magnitude na faixa central (80% das obs) |
-| **Contras** | 20% das observações (abaixo do Q10 e acima do Q90) são colapsadas em 0 ou 1, perdendo distinção entre si; a escolha de Q10/Q90 é arbitrária (poderia ser Q5/Q95 etc.) |
-
-#### 3.1.3. Rank Percentil
-
-$$
-x^{norm}_t = \frac{|\{s \in \{1,\ldots,N\} : x_s \leq x_t\}|}{N}
-$$
-
-O numerador conta quantas observações da **amostra completa** são menores ou iguais ao valor atual; $N$ é o total de observações. O resultado é diretamente o **percentil empírico** de $x_t$ na distribuição histórica: um valor de 0,8 significa que 80% de todas as observações da amostra foram iguais ou inferiores ao nível atual. Note que o ranqueamento é feito sobre a amostra inteira (*ex post*), não apenas sobre observações anteriores a $t$.
-
-| | |
-|---|---|
-| **Prós** | Totalmente robusto a outliers; interpretável diretamente como percentil histórico ("o componente está no percentil 80 desde 2011") |
+| **Prós** | Totalmente robusto a outliers; interpretável diretamente como percentil histórico |
 | **Contras** | Não-linear: perde informação sobre a magnitude das diferenças entre observações |
 
-### 3.2. Agregação
+### 3.2. Janelas de Normalização
+
+Os parâmetros $\min_\tau$, $\max_\tau$ e a distribuição de referência de cada componente são calculados sobre uma **janela temporal** $\tau$, sem viés de lookahead — em cada período $t$, a janela usa apenas observações disponíveis até $t$.
+
+O índice é produzido em duas variantes de janela:
+
+#### 3.2.1. Janela Expansiva
+
+A janela cresce a partir do início da amostra (mar-2011): $\tau = \{1, \ldots, t\}$. Os primeiros anos do histórico são utilizados como período de aquecimento; o índice é exibido a partir de **jan-2014** (~34 meses de aquecimento).
+
+#### 3.2.2. Janela Móvel (60 meses)
+
+A janela cobre os 60 meses imediatamente anteriores a cada período: $\tau = \{t-59, \ldots, t\}$. A série começa naturalmente em **mar-2016** (quando o primeiro bloco de 60 observações fica disponível). Esta variante é mais sensível a mudanças de regime recentes, pois o nível de estresse é sempre calibrado em relação aos últimos 5 anos.
+
+### 3.3. Agregação
 
 Após normalização, o índice é calculado como média simples dos três componentes:
 
 $$
-Índice_t = \frac{1}{3} (C_t + I_t + Q_t)
+\text{Índice}_t = \frac{1}{3} (C_t + I_t + Q_t)
 $$
 
 onde:
@@ -103,11 +101,33 @@ onde:
 - $I_t$: inadimplência (normalizada)
 - $Q_t$: qualidade do crédito (normalizada)
 
-O índice é produzido em **três versões paralelas**, uma para cada método de normalização (4.1.1, 4.1.2, 4.1.3), com pesos iguais (1/3) em todas.
+O índice é produzido em **quatro versões paralelas**: dois métodos de normalização (3.1.1 e 3.1.2) × duas janelas (3.2.1 e 3.2.2), com pesos iguais (1/3) em todas.
+
+### 3.4. Representação Base 100
+
+Além das versões normalizadas [0–1], os componentes brutos e os índices compostos são também expressos em **base 100**, facilitando a comparação da dinâmica relativa entre séries com magnitudes distintas.
+
+$$
+x^{base100}_t = \frac{x_t}{x_{t_0}} \times 100
+$$
+
+onde $t_0$ é a primeira observação válida de cada série. Um valor de 120 indica que a série cresceu 20% em relação à base.
+
+A transformação é aplicada a:
+
+- **Componentes brutos** (C, I, Q): $t_0$ = mar-2011 (início da amostra), permitindo visualizar qual componente variou mais em termos relativos ao longo de todo o período.
+- **Índices compostos**: $t_0$ é o primeiro valor não-NaN de cada variante de janela (jan-2014 para expansiva; mar-2016 para móvel 60m).
+
+Diferente das versões normalizadas, a escala base 100 **não tem limites fixos** — o eixo Y é livre, refletindo a magnitude real das variações relativas.
 
 ## 4. Horizonte Temporal
 
-O índice cobre todo o período disponível dos dados. Na prática, o horizonte efetivo é **mar-2011 a jan-2026** (179 observações mensais), determinado pela série mais curta disponível na planilha — SGS 29034 (comprometimento de renda), que é publicada com maior defasagem que as demais.
+Os dados brutos cobrem **mar-2011 a jan-2026** (179 observações mensais), determinado pela série mais curta disponível na planilha — SGS 29034 (comprometimento de renda), que é publicada com maior defasagem que as demais. O horizonte visível de cada variante do índice é:
+
+| Variante | Início da série exibida |
+|---|---|
+| Janela Expansiva | jan-2014 |
+| Janela Móvel (60m) | mar-2016 |
 
 ## 5. Como Reproduzir
 
@@ -123,7 +143,7 @@ pip install -r requirements.txt
 python main.py
 ```
 
-O script carrega os dados, constrói os três componentes e as três versões do índice, salva os CSVs em `outputs/data/` e as figuras em `outputs/figures/`.
+O script carrega os dados, constrói os três componentes e as quatro versões do índice (2 métodos × 2 janelas), salva os CSVs em `outputs/data/` e as figuras em `outputs/figures/`.
 
 ## 6. Estrutura do Repositório
 
@@ -137,12 +157,15 @@ O script carrega os dados, constrói os três componentes e as três versões do
 │       └── alreracoes-metodologicas/                           # boxes metodológicos do BCB
 ├── src/
 │   ├── load_data.py     # carrega as séries do Excel
-│   ├── normalize.py     # três funções de normalização
+│   ├── normalize.py     # funções de normalização (min-max e rank percentil, expansiva e móvel)
 │   ├── build_index.py   # constrói componentes C, I, Q e agrega o índice
 │   └── plot.py          # gera as figuras
 ├── outputs/
-│   ├── data/            # series_raw.csv, components_raw.csv, index_full.csv
-│   └── figures/         # figuras 01–08 (PNG)
+│   ├── data/            # series_raw.csv, components_raw.csv, index_expanding.csv, index_rolling.csv
+│   └── figures/
+│       ├── general/     # componentes brutos (não normalizados)
+│       ├── expanding/   # figuras da janela expansiva
+│       └── rolling/     # figuras da janela móvel 60m
 ├── main.py              # ponto de entrada
 ├── requirements.txt
 └── README.md
@@ -150,17 +173,49 @@ O script carrega os dados, constrói os três componentes e as três versões do
 
 ## 7. Outputs Gerados
 
-- **`outputs/data/series_raw.csv`** — séries brutas carregadas do Excel
-- **`outputs/data/components_raw.csv`** — componentes C, I, Q antes da normalização
-- **`outputs/data/index_full.csv`** — componentes normalizados e índice agregado para os três métodos
-- **`outputs/figures/01_index_comparison.png`** — três versões do índice sobrepostas para comparação direta
-- **`outputs/figures/02_components_raw.png`** — componentes individuais em valores brutos (não normalizados)
-- **`outputs/figures/03_components_minmax.png`** — componentes normalizados pelo método Min-Max
-- **`outputs/figures/04_components_robust.png`** — componentes normalizados pelo método Min-Max Robusto
-- **`outputs/figures/05_components_percentile.png`** — componentes normalizados pelo método Rank Percentil
-- **`outputs/figures/06_index_minmax.png`** — índice Min-Max isolado
-- **`outputs/figures/07_index_robust.png`** — índice Min-Max Robusto isolado
-- **`outputs/figures/08_index_percentile.png`** — índice Rank Percentil isolado
+**Dados (`outputs/data/`):**
+
+- **`series_raw.csv`** — séries brutas carregadas do Excel
+- **`components_raw.csv`** — componentes C, I, Q antes da normalização
+- **`index_expanding.csv`** — componentes normalizados e índice agregado (janela expansiva, a partir de jan-2014)
+- **`index_rolling.csv`** — componentes normalizados e índice agregado (janela móvel 60m, a partir de mar-2016)
+
+**Figuras (`outputs/figures/`):**
+
+Organizadas em subpastas por tipo de janela de normalização.
+
+`general/`:
+
+| Arquivo | Conteúdo |
+|---|---|
+| `components_raw.png` | Componentes C, I, Q em valores brutos (não normalizados) |
+| `components_base100.png` | C, I, Q sobrepostos em base 100 (Mar-2011 = 100) |
+
+`expanding/` — janela expansiva:
+
+| Arquivo | Conteúdo |
+|---|---|
+| `index_comparison.png` | Min-Max e Rank Percentil sobrepostos |
+| `components_minmax.png` | Componentes normalizados por Min-Max |
+| `components_percentile.png` | Componentes normalizados por Rank Percentil |
+| `index_minmax.png` | Índice Min-Max isolado |
+| `index_percentile.png` | Índice Rank Percentil isolado |
+| `index_comparison_base100.png` | Min-Max e Rank Percentil sobrepostos — base 100 |
+| `index_minmax_base100.png` | Índice Min-Max isolado — base 100 |
+| `index_percentile_base100.png` | Índice Rank Percentil isolado — base 100 |
+
+`rolling/` — janela móvel 60m:
+
+| Arquivo | Conteúdo |
+|---|---|
+| `index_comparison.png` | Min-Max e Rank Percentil sobrepostos |
+| `components_minmax.png` | Componentes normalizados por Min-Max |
+| `components_percentile.png` | Componentes normalizados por Rank Percentil |
+| `index_minmax.png` | Índice Min-Max isolado |
+| `index_percentile.png` | Índice Rank Percentil isolado |
+| `index_comparison_base100.png` | Min-Max e Rank Percentil sobrepostos — base 100 |
+| `index_minmax_base100.png` | Índice Min-Max isolado — base 100 |
+| `index_percentile_base100.png` | Índice Rank Percentil isolado — base 100 |
 
 ## 8. Observações
 

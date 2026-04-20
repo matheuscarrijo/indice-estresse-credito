@@ -1,16 +1,16 @@
 # Metodologia 
 
-Este arquivo é o sumário metodológico dos dados [data/sgs-estatisticas-de-credito-endividamento-das-familias/tabelas-estatisticas-de-credito-endividamento-das-familias.csv
-](data/sgs-estatisticas-de-credito-endividamento-das-familias/tabelas-estatisticas-de-credito-endividamento-das-familias.csv)
+Este arquivo é o sumário metodológico dos dados [tabelas-estatisticas-de-credito-endividamento-das-familias.csv
+](tabelas-estatisticas-de-credito-endividamento-das-familias.csv)
 
 As alterações metodológicas foram divulgadas nos boxes:
 
-- [Endividamento e Comprometimento de Renda das Famílias com Dívidas Bancárias: revisão metodológica, de setembro de 2011](data/sgs-estatisticas-de-credito-endividamento-das-familias/alreracoes-metodologicas/RELESTAB201109-refP.pdf)
-- [Evolução Recente do Crédito, da Inadimplência e do Endividamento, de setembro de 2008](data/sgs-estatisticas-de-credito-endividamento-das-familias/alreracoes-metodologicas/ri200809b2p.pdf)
-- [Evolução da Inadimplência, do Endividamento e do Comprometimento de Renda das Famílias, de junho de 2009](data/sgs-estatisticas-de-credito-endividamento-das-familias/alreracoes-metodologicas/ri200906b3p.pdf)
-- [Evolução dos Indicadores de Endividamento e Comprometimento de Renda após a Crise, de março de 2010](data/sgs-estatisticas-de-credito-endividamento-das-familias/alreracoes-metodologicas/ri201003b2p.pdf)
-- [Endividamento e Comprometimento da Renda das Famílias: Incorporação do Conceito de Massa Salarial Ampliada Disponível, de setembro de 2010](data/sgs-estatisticas-de-credito-endividamento-das-familias/alreracoes-metodologicas/ri201009b3p.pdf)
-- [Estimativa mensal da Renda Nacional Disponível Bruta das Famílias, de dezembro de 2021](data/sgs-estatisticas-de-credito-endividamento-das-familias/alreracoes-metodologicas/ri202112b2p.pdf)
+- [Endividamento e Comprometimento de Renda das Famílias com Dívidas Bancárias: revisão metodológica, de setembro de 2011](alreracoes-metodologicas/RELESTAB201109-refP.pdf)
+- [Evolução Recente do Crédito, da Inadimplência e do Endividamento, de setembro de 2008](alreracoes-metodologicas/ri200809b2p.pdf)
+- [Evolução da Inadimplência, do Endividamento e do Comprometimento de Renda das Famílias, de junho de 2009](alreracoes-metodologicas/ri200906b3p.pdf)
+- [Evolução dos Indicadores de Endividamento e Comprometimento de Renda após a Crise, de março de 2010](alreracoes-metodologicas/ri201003b2p.pdf)
+- [Endividamento e Comprometimento da Renda das Famílias: Incorporação do Conceito de Massa Salarial Ampliada Disponível, de setembro de 2010](alreracoes-metodologicas/ri201009b3p.pdf)
+- [Estimativa mensal da Renda Nacional Disponível Bruta das Famílias, de dezembro de 2021](alreracoes-metodologicas/ri202112b2p.pdf)
 
 ---
 
