@@ -5,7 +5,7 @@ from typing import Optional, Union
 import pandas as pd
 import openpyxl
 
-DATA_DIR = Path("data")
+DATA_DIR = Path("data/raw")
 TABLE_FILENAME_RE = re.compile(
     r"^(?P<period>\d{6})_Tabelas_de_estatisticas_monetarias_e_de_credito\.xlsx$"
 )
@@ -60,7 +60,7 @@ def find_latest_bcb_table(data_dir: Path = DATA_DIR) -> Path:
 
     if not candidates:
         raise FileNotFoundError(
-            "Nenhuma planilha mensal do BCB encontrada em data/YYYYMM/. "
+            "Nenhuma planilha mensal do BCB encontrada em data/raw/YYYYMM/. "
             "Execute: python -m src.download_bcb_release YYYYMM"
         )
 
@@ -70,7 +70,7 @@ def find_latest_bcb_table(data_dir: Path = DATA_DIR) -> Path:
 def load_raw_series(excel_path: Optional[Union[str, Path]] = None) -> pd.DataFrame:
     """Load all series required for the index from the BCB Excel file.
 
-    Sources (all from the latest YYYYMM BCB monthly table in data/YYYYMM/):
+    Sources (all from the latest YYYYMM BCB monthly table in data/raw/YYYYMM/):
       - Tab 27, SGS 29034: comprometimento de renda das famílias (dessaz., %)
       - Tab 4,  SGS 21112: inadimplência carteira livre PF 90+ dias (%)
       - Tab 7,  SGS 20570: saldo total crédito livre PF (R$ milhões)

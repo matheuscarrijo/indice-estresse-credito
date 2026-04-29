@@ -4,11 +4,11 @@ from src.build_index import build_components, build_index
 from src.load_data import load_raw_series
 from src.plot import plot_all
 
-DATA_OUT = Path("outputs/data")
+DATA_OUT = Path("data/processed")
 
 
 def main() -> None:
-    Path("outputs/data").mkdir(parents=True, exist_ok=True)
+    DATA_OUT.mkdir(parents=True, exist_ok=True)
 
     print("Carregando dados do BCB...")
     raw = load_raw_series()
@@ -41,7 +41,7 @@ def _print_summary(index_df) -> None:
         f" {s.std():8.3f} {s.min():8.3f} {s.max():8.3f}"
     )
     print("\nOutputs salvos em:")
-    print("  outputs/data/     — series_raw.csv, components_raw.csv, index.csv")
+    print("  data/processed/   — series_raw.csv, components_raw.csv, index.csv")
     print("  outputs/figures/  — 6 figuras (PNG)")
 
 

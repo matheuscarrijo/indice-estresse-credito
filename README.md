@@ -54,7 +54,7 @@ O projeto surge no contexto de:
 
 ## 2. Estrutura do Índice
 
-O índice é composto por **três dimensões**, cada uma com dados disponíveis na planilha mensal de Estatísticas Monetárias e de Crédito do Banco Central, armazenada em `data/YYYYMM/` com o prefixo de competência usado pelo próprio BC. Para mais informações sobre os dados, ver a seção 8 abaixo.
+O índice é composto por **três dimensões**, cada uma com dados disponíveis na planilha mensal de Estatísticas Monetárias e de Crédito do Banco Central, armazenada em `data/raw/YYYYMM/` com o prefixo de competência usado pelo próprio BC. Para mais informações sobre os dados, ver a seção 8 abaixo.
 
 ### 2.1. Comprometimento de renda com dívida
 
@@ -131,7 +131,7 @@ pip install -r requirements.txt
 python -m src.download_bcb_release 202604
 ```
 
-O comando acima baixa a tabela XLSX e o PDF do relatório mensal do Banco Central para `data/202604/`. Por padrão, arquivos existentes não são sobrescritos; use `--overwrite` para forçar novo download.
+O comando acima baixa a tabela XLSX e o PDF do relatório mensal do Banco Central para `data/raw/202604/`. Por padrão, arquivos existentes não são sobrescritos; use `--overwrite` para forçar novo download.
 
 **Execução do índice** a partir do diretório raiz do projeto:
 
@@ -139,15 +139,23 @@ O comando acima baixa a tabela XLSX e o PDF do relatório mensal do Banco Centra
 python main.py
 ```
 
-O script carrega automaticamente a planilha mais recente em `data/YYYYMM/`, constrói os três componentes e o índice (normalização min-max com janela expansiva), salva os CSVs em `outputs/data/` e as figuras em `outputs/figures/`. O relatório final do projeto fica em `outputs/report/`.
+O script carrega automaticamente a planilha mais recente em `data/raw/YYYYMM/`, constrói os três componentes e o índice (normalização min-max com janela expansiva), salva os CSVs em `data/processed/` e as figuras em `outputs/figures/`. O relatório final do projeto fica em `outputs/report/`.
 
 ## 6. Estrutura do Repositório
 
 ```
 ├── data/
-│   ├── 202603/
-│   │   ├── 202603_Tabelas_de_estatisticas_monetarias_e_de_credito.xlsx
-│   │   └── 202603_Texto_de_estatisticas_monetarias_e_de_credito.pdf
+│   ├── raw/
+│   │   ├── 202603/
+│   │   │   ├── 202603_Tabelas_de_estatisticas_monetarias_e_de_credito.xlsx
+│   │   │   └── 202603_Texto_de_estatisticas_monetarias_e_de_credito.pdf
+│   │   └── 202604/
+│   │       ├── 202604_Tabelas_de_estatisticas_monetarias_e_de_credito.xlsx
+│   │       └── 202604_Texto_de_estatisticas_monetarias_e_de_credito.pdf
+│   └── processed/
+│       ├── series_raw.csv
+│       ├── components_raw.csv
+│       └── index.csv
 ├── src/
 │   ├── download_bcb_release.py   # baixa a divulgação mensal do BCB (XLSX + PDF)
 │   ├── load_data.py     # carrega as séries do Excel
@@ -155,7 +163,6 @@ O script carrega automaticamente a planilha mais recente em `data/YYYYMM/`, cons
 │   ├── build_index.py   # constrói componentes C, I, Q e agrega o índice
 │   └── plot.py          # gera as figuras
 ├── outputs/
-│   ├── data/            # series_raw.csv, components_raw.csv, index.csv
 │   ├── figures/         # 6 figuras (PNG)
 │   └── report/          # relatório final (não versionado)
 ├── main.py              # ponto de entrada
@@ -165,7 +172,7 @@ O script carrega automaticamente a planilha mais recente em `data/YYYYMM/`, cons
 
 ## 7. Outputs Gerados
 
-**Dados (`outputs/data/`):**
+**Dados (`data/processed/`):**
 
 - **`series_raw.csv`** — séries brutas carregadas do Excel
 - **`components_raw.csv`** — componentes C, I, Q antes da normalização
@@ -188,14 +195,14 @@ O script carrega automaticamente a planilha mais recente em `data/YYYYMM/`, cons
 
 ## 8. Estrutura e Fontes de Dados
 
-Os arquivos mensais em **`data/YYYYMM/`** são a **fonte primária** para a construção do índice. Cada pasta mensal preserva o prefixo de competência `YYYYMM` usado pelo Banco Central no arquivo disponibilizado para download.
+Os arquivos mensais em **`data/raw/YYYYMM/`** são a **fonte primária** para a construção do índice. Cada pasta mensal preserva o prefixo de competência `YYYYMM` usado pelo Banco Central no arquivo disponibilizado para download.
 
 Para cada competência, são armazenados dois arquivos:
 
 - **`YYYYMM_Tabelas_de_estatisticas_monetarias_e_de_credito.xlsx`** — planilha usada no cálculo do índice.
 - **`YYYYMM_Texto_de_estatisticas_monetarias_e_de_credito.pdf`** — relatório do Banco Central que acompanha a divulgação mensal dos dados.
 
-O módulo `src.load_data` localiza automaticamente a planilha mais recente disponível em `data/YYYYMM/`. O script `src.download_bcb_release` automatiza o download mensal desses dois arquivos:
+O módulo `src.load_data` localiza automaticamente a planilha mais recente disponível em `data/raw/YYYYMM/`. O script `src.download_bcb_release` automatiza o download mensal desses dois arquivos:
 
 ```bash
 python -m src.download_bcb_release YYYYMM

@@ -78,8 +78,8 @@ def main() -> int:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("data"),
-        help="Diretorio base para salvar data/YYYYMM/ (padrao: data).",
+        default=Path("data/raw"),
+        help="Diretorio base para salvar data/raw/YYYYMM/ (padrao: data/raw).",
     )
     parser.add_argument(
         "--overwrite",
