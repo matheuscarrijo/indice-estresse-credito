@@ -69,23 +69,6 @@ onde:
 - $I_t$: inadimplência (normalizada)
 - $Q_t$: qualidade do crédito (normalizada)
 
-### 3.3. Representação Base 100
-
-Além da versão normalizada [0–1], os componentes brutos e o índice composto são também expressos em **base 100**, facilitando a comparação da dinâmica relativa entre séries com magnitudes distintas.
-
-$$
-x^{base100}_t = \frac{x_t}{x_{t_0}} \times 100
-$$
-
-onde $t_0$ é a primeira observação válida de cada série. Um valor de 120 indica que a série cresceu 20% em relação à base.
-
-A transformação é aplicada a:
-
-- **Componentes brutos** (C, I, Q): $t_0$ = jan-2014 (alinhado com o início do índice), permitindo visualizar qual componente variou mais em termos relativos.
-- **Índice composto**: $t_0$ = jan-2014 (primeiro valor não-NaN após o período de aquecimento).
-
-Diferente da versão normalizada, a escala base 100 **não tem limites fixos** — o eixo Y é livre, refletindo a magnitude real das variações relativas.
-
 ## 4. Horizonte Temporal
 
 Os dados brutos cobrem **mar-2011 a jan-2026** (179 observações mensais), determinado pela série mais curta disponível na planilha — SGS 29034 (comprometimento de renda), que é publicada com maior defasagem que as demais. O índice é exibido a partir de **jan-2014**, após ~34 meses de aquecimento da janela expansiva.
@@ -142,11 +125,11 @@ O script carrega os dados, constrói os três componentes e o índice (normaliza
 | Arquivo | Conteúdo |
 |---|---|
 | `components_raw.png` | Componentes C, I, Q em valores brutos (não normalizados) |
-| `components_base100.png` | C, I, Q sobrepostos em base 100 (Jan-2014 = 100) |
+| `components_raw_c.png` | Componente C em valores brutos |
+| `components_raw_i.png` | Componente I em valores brutos |
+| `components_raw_q.png` | Componente Q em valores brutos |
 | `components_normalized.png` | Componentes normalizados por Min-Max sobrepostos |
-| `components_normalized_base100.png` | Componentes normalizados — evolução em base 100 |
 | `index.png` | Índice de Desconforto de Crédito |
-| `index_base100.png` | Índice em base 100 |
 
 ## 8. Observações
 
