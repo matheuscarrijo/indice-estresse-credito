@@ -11,17 +11,32 @@ Este repositório contém o código e a documentação para a construção de um
 
 Com a divulgação em **abr-2026** das estatísticas monetárias e de crédito do Banco Central, o último mês calculável do IDC é **fev-2026**, pois a série de comprometimento de renda está disponível somente até esse mês
 
+<!-- IDC_LATEST_START -->
 | Indicador | Valor bruto | Valor normalizado |
 |---|---:|---:|
 | IDC | — | **1,000** |
 | C — comprometimento de renda | 29,7% | 1,000 |
 | I — inadimplência 90+ dias | 7,2% | 1,000 |
 | Q — crédito oneroso no crédito livre PF | 25,1% | 1,000 |
+<!-- IDC_LATEST_END -->
 
 
 O valor **1,000** indica que, em fev-2026, o desconforto de crédito atingiu o ponto máximo da janela histórica observada pelo índice. Como os três componentes também estão em `1,000` após normalização, o resultado reflete uma combinação simultânea de comprometimento de renda, inadimplência e composição do crédito em seus maiores níveis relativos na amostra.
 
 É importante destacar que o IDC não é uma medida absoluta de endividamento; ele indica a posição do mês corrente em relação ao histórico disponível.
+
+### Estatísticas Descritivas do IDC
+
+<!-- IDC_STATS_START -->
+| Estatística | Valor |
+|---|---:|
+| Último dado | fev-2026 |
+| Atual | 1,000 |
+| Média | 0,502 |
+| Desvio padrão | 0,285 |
+| Mínimo | 0,012 |
+| Máximo | 1,000 |
+<!-- IDC_STATS_END -->
 
 
 ## Séries Completas
