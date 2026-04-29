@@ -12,7 +12,7 @@ O projeto surge no contexto de:
 
 ## 2. Estrutura do Índice
 
-O índice é composto por **três dimensões**, cada uma com dados disponíveis na planilha [data/estatisticas-monetarias-e-de-credito/tabelas-estatisticas-monetarias-e-de-credito.xlsx](data/estatisticas-monetarias-e-de-credito/tabelas-estatisticas-monetarias-e-de-credito.xlsx). Para mais informações sobre os dados, ver a seção 9 abaixo.
+O índice é composto por **três dimensões**, cada uma com dados disponíveis na planilha mensal de Estatísticas Monetárias e de Crédito do Banco Central, armazenada em `data/YYYYMM/` com o prefixo de competência usado pelo próprio BC. Para mais informações sobre os dados, ver a seção 8 abaixo.
 
 ### 2.1. Comprometimento de renda com dívida
 
@@ -71,7 +71,9 @@ onde:
 
 ## 4. Horizonte Temporal
 
-Os dados brutos cobrem **mar-2011 a jan-2026** (179 observações mensais), determinado pela série mais curta disponível na planilha — SGS 29034 (comprometimento de renda), que é publicada com maior defasagem que as demais. O índice é exibido a partir de **jan-2014**, após ~34 meses de aquecimento da janela expansiva.
+O horizonte efetivo do índice é determinado pela série mais curta disponível na planilha mensal do Banco Central — em geral, a SGS 29034 (comprometimento de renda), que é publicada com maior defasagem que as demais. A planilha pode conter observações mais recentes para algumas séries, mas o índice usa apenas os meses em que os três componentes C, I e Q estão disponíveis. O índice é exibido a partir de **jan-2014**, após ~34 meses de aquecimento da janela expansiva.
+
+Assim, a competência da divulgação do Banco Central não necessariamente coincide com o último mês calculável do IDC. Por exemplo, a divulgação **202604** traz a série de comprometimento de renda até **fev-2026** e as demais séries usadas no índice até **mar-2026**; como o IDC exige todos os componentes no mesmo mês, o índice calculado com essa divulgação termina em **fev-2026**.
 
 ## 5. Como Reproduzir
 
@@ -81,25 +83,35 @@ Os dados brutos cobrem **mar-2011 a jan-2026** (179 observações mensais), dete
 pip install -r requirements.txt
 ```
 
-**Execução** a partir do diretório raiz do projeto:
+**Atualização mensal dos dados do Banco Central** a partir do diretório raiz do projeto:
+
+```bash
+python -m src.download_bcb_release 202604
+```
+
+O comando acima baixa a tabela XLSX e o PDF do relatório mensal do Banco Central para `data/202604/`. Por padrão, arquivos existentes não são sobrescritos; use `--overwrite` para forçar novo download.
+
+**Execução do índice** a partir do diretório raiz do projeto:
 
 ```bash
 python main.py
 ```
 
-O script carrega os dados, constrói os três componentes e o índice (normalização min-max com janela expansiva), salva os CSVs em `outputs/data/` e as figuras em `outputs/figures/`. O relatório final do projeto fica em `outputs/report/`.
+O script carrega automaticamente a planilha mais recente em `data/YYYYMM/`, constrói os três componentes e o índice (normalização min-max com janela expansiva), salva os CSVs em `outputs/data/` e as figuras em `outputs/figures/`. O relatório final do projeto fica em `outputs/report/`.
 
 ## 6. Estrutura do Repositório
 
 ```
 ├── data/
-│   ├── estatisticas-monetarias-e-de-credito/
-│   │   └── tabelas-estatisticas-monetarias-e-de-credito.xlsx   # fonte primária (BCB)
+│   ├── 202603/
+│   │   ├── 202603_Tabelas_de_estatisticas_monetarias_e_de_credito.xlsx
+│   │   └── 202603_Texto_de_estatisticas_monetarias_e_de_credito.pdf
 │   └── sgs-estatisticas-de-credito-endividamento-das-familias/
 │       ├── tabelas-estatisticas-de-credito-endividamento-das-familias.csv
 │       ├── metodologia.md
 │       └── alreracoes-metodologicas/                           # boxes metodológicos do BCB
 ├── src/
+│   ├── download_bcb_release.py   # baixa a divulgação mensal do BCB (XLSX + PDF)
 │   ├── load_data.py     # carrega as séries do Excel
 │   ├── normalize.py     # normalização min-max com janela expansiva
 │   ├── build_index.py   # constrói componentes C, I, Q e agrega o índice
@@ -136,17 +148,22 @@ O script carrega os dados, constrói os três componentes e o índice (normaliza
 
 - **`IDC-report.docx`** — relatório final do projeto. A pasta é ignorada pelo Git para evitar versionamento de versões locais do documento.
 
-## 8. Observações
+## 8. Estrutura e Fontes de Dados
 
-- O índice não tem pretensão de precisão estrutural (não é modelo causal)
-- O foco é **sinalização agregada e comunicação**
-- Simplicidade e transparência são prioritárias sobre sofisticação desnecessária
+### 8.1. Fonte principal (construção do índice)
 
-## 9. Estrutura e Fontes de Dados
+Os arquivos mensais em **`data/YYYYMM/`** são a **fonte primária** para a construção do índice. Cada pasta mensal preserva o prefixo de competência `YYYYMM` usado pelo Banco Central no arquivo disponibilizado para download.
 
-### 9.1. Fonte principal (construção do índice)
+Para cada competência, são armazenados dois arquivos:
 
-O arquivo **[`data/estatisticas-monetarias-e-de-credito/tabelas-estatisticas-monetarias-e-de-credito.xlsx`](data/estatisticas-monetarias-e-de-credito/tabelas-estatisticas-monetarias-e-de-credito.xlsx)** é a **fonte primária** para a construção do índice.
+- **`YYYYMM_Tabelas_de_estatisticas_monetarias_e_de_credito.xlsx`** — planilha usada no cálculo do índice.
+- **`YYYYMM_Texto_de_estatisticas_monetarias_e_de_credito.pdf`** — relatório do Banco Central que acompanha a divulgação mensal dos dados.
+
+O módulo `src.load_data` localiza automaticamente a planilha mais recente disponível em `data/YYYYMM/`. O script `src.download_bcb_release` automatiza o download mensal desses dois arquivos:
+
+```bash
+python -m src.download_bcb_release YYYYMM
+```
 
 - Obtido em: [https://www.bcb.gov.br/estatisticas/estatisticasmonetariascredito](https://www.bcb.gov.br/estatisticas/estatisticasmonetariascredito)
 - Trata-se de uma **compilação oficial do Banco Central do Brasil** de um subconjunto selecionado de séries temporais do Sistema Gerenciador de Séries Temporais (SGS).
@@ -155,7 +172,7 @@ O arquivo **[`data/estatisticas-monetarias-e-de-credito/tabelas-estatisticas-mon
 
 **Identificação das séries dentro da planilha:** em cada aba, a **linha 7** contém o cabeçalho `SGS` com o número identificador de cada série no sistema SGS/BCB. Exemplo: a série **29034** está na célula **D7** da aba **`Tab 27`**.
 
-### 9.2. Fontes auxiliares (conferência e metodologia)
+### 8.2. Fontes auxiliares (conferência e metodologia)
 
 As demais pastas em `data/` contêm dados obtidos **diretamente do SGS** ([https://www3.bcb.gov.br/sgspub](https://www3.bcb.gov.br/sgspub/localizarseries/localizarSeries.do?method=prepararTelaLocalizarSeries)), série a série, e servem como **referência auxiliar**:
 

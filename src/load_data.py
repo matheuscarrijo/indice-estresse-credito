@@ -1,8 +1,14 @@
+import re
+from pathlib import Path
+from typing import Optional, Union
+
 import pandas as pd
 import openpyxl
-from pathlib import Path
 
-EXCEL_PATH = Path("data/estatisticas-monetarias-e-de-credito/tabelas-estatisticas-monetarias-e-de-credito.xlsx")
+DATA_DIR = Path("data")
+TABLE_FILENAME_RE = re.compile(
+    r"^(?P<period>\d{6})_Tabelas_de_estatisticas_monetarias_e_de_credito\.xlsx$"
+)
 
 _PT_MONTHS = {
     "jan": 1, "fev": 2, "mar": 3, "abr": 4,
@@ -45,10 +51,26 @@ def _read_series(wb, sheet_name: str, sgs_code: int) -> pd.Series:
     return pd.Series(data, name=f"sgs_{sgs_code}")
 
 
-def load_raw_series() -> pd.DataFrame:
+def find_latest_bcb_table(data_dir: Path = DATA_DIR) -> Path:
+    candidates = []
+    for path in data_dir.glob("[0-9][0-9][0-9][0-9][0-9][0-9]/*.xlsx"):
+        match = TABLE_FILENAME_RE.match(path.name)
+        if match and path.parent.name == match.group("period"):
+            candidates.append((match.group("period"), path))
+
+    if not candidates:
+        raise FileNotFoundError(
+            "Nenhuma planilha mensal do BCB encontrada em data/YYYYMM/. "
+            "Execute: python -m src.download_bcb_release YYYYMM"
+        )
+
+    return max(candidates, key=lambda item: item[0])[1]
+
+
+def load_raw_series(excel_path: Optional[Union[str, Path]] = None) -> pd.DataFrame:
     """Load all series required for the index from the BCB Excel file.
 
-    Sources (all from tabelas-estatisticas-monetarias-e-de-credito.xlsx):
+    Sources (all from the latest YYYYMM BCB monthly table in data/YYYYMM/):
       - Tab 27, SGS 29034: comprometimento de renda das famílias (dessaz., %)
       - Tab 4,  SGS 21112: inadimplência carteira livre PF 90+ dias (%)
       - Tab 7,  SGS 20570: saldo total crédito livre PF (R$ milhões)
@@ -57,7 +79,8 @@ def load_raw_series() -> pd.DataFrame:
       - Tab 7,  SGS 20587: cartão de crédito rotativo (R$ milhões)
       - Tab 7,  SGS 20588: cartão de crédito parcelado (R$ milhões)
     """
-    wb = openpyxl.load_workbook(EXCEL_PATH, read_only=True, data_only=True)
+    source_path = Path(excel_path) if excel_path is not None else find_latest_bcb_table()
+    wb = openpyxl.load_workbook(source_path, read_only=True, data_only=True)
     try:
         df = pd.DataFrame({
             "comprometimento_renda": _read_series(wb, "Tab 27", 29034),
