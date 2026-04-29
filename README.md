@@ -32,7 +32,11 @@ O valor **1,000** indica que, em fev-2026, o desconforto de crédito atingiu o p
 
 ### Componentes Brutos
 
-![Componentes brutos do IDC](outputs/figures/components_raw.png)
+![Componente C — Comprometimento de renda](outputs/figures/components_raw_c.png)
+
+![Componente I — Inadimplência](outputs/figures/components_raw_i.png)
+
+![Componente Q — Crédito oneroso](outputs/figures/components_raw_q.png)
 
 ## Divulgação e Repercussão
 
