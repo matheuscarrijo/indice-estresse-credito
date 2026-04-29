@@ -703,17 +703,96 @@ def _plot_components_raw(components: pd.DataFrame) -> None:
 
     for i, (ax, (comp, series, unit)) in enumerate(zip(axes, configs)):
         event_positions = None
-        if i == 0:
+        candidate_overrides = None
+        event_anchor_dates = None
+        if comp == "C":
             event_positions = {"Programa\nDesenrola": {"coords": "data", "y": 22.5}}
+            candidate_overrides = {
+                **_CLOSE_LABEL_OVERRIDES,
+                "start": [
+                    (0, -7, "center", "top"),
+                    (-1, -7, "center", "top"),
+                    (2, -7, "left", "top"),
+                    (-2, -5, "center", "top"),
+                    (3, -5, "left", "top"),
+                ],
+                "end": [
+                    (2, 7, "left", "bottom"),
+                    (0, 7, "center", "bottom"),
+                    (-2, 7, "right", "bottom"),
+                    (4, 5, "left", "bottom"),
+                    (-4, 7, "right", "bottom"),
+                ],
+            }
+            event_anchor_dates = _local_peak_dates_near_events(series, window_months=6)
+        elif comp == "I":
+            candidate_overrides = {
+                **_CLOSE_LABEL_OVERRIDES,
+                "end": [
+                    (2, 7, "left", "bottom"),
+                    (0, 7, "center", "bottom"),
+                    (4, 5, "left", "bottom"),
+                    (-2, 7, "right", "bottom"),
+                    (-4, 7, "right", "bottom"),
+                ],
+            }
+            event_anchor_dates = {
+                "Pandemia\nCOVID-19": _nearest_local_peak_after_date(
+                    series,
+                    KEY_EVENTS["Pandemia\nCOVID-19"],
+                    window_months=6,
+                )
+            }
+        elif comp == "Q":
+            candidate_overrides = {
+                **_CLOSE_LABEL_OVERRIDES,
+                "start": [
+                    (-2, -5, "right", "top"),
+                    (-1, -7, "right", "top"),
+                    (-3, -3, "right", "top"),
+                    (-2, 0, "right", "center"),
+                    (0, -7, "center", "top"),
+                ],
+                "end": [
+                    (2, 7, "left", "bottom"),
+                    (0, 7, "center", "bottom"),
+                    (4, 5, "left", "bottom"),
+                    (-2, 7, "right", "bottom"),
+                    (-4, 7, "right", "bottom"),
+                ],
+                "event::Programa\nDesenrola": [
+                    (0, -7, "center", "top"),
+                    (2, -7, "left", "top"),
+                    (-2, -7, "right", "top"),
+                    (4, -5, "left", "top"),
+                    (-4, -5, "right", "top"),
+                ],
+                "post_pandemic_min": [
+                    (-6, 0, "right", "center"),
+                    (-6, 3, "right", "bottom"),
+                    (-6, -3, "right", "top"),
+                    (-8, 0, "right", "center"),
+                    (-8, 3, "right", "bottom"),
+                ],
+            }
+            event_anchor_dates = {
+                "Pandemia\nCOVID-19": _nearest_local_peak_after_date(
+                    series,
+                    KEY_EVENTS["Pandemia\nCOVID-19"],
+                    window_months=6,
+                )
+            }
         _plot_raw_component_panel(
             ax,
             comp,
             series,
             unit,
-            show_event_labels=(i == 0),
+            show_event_labels=True,
             event_positions=event_positions,
             show_xlabel=(i == len(configs) - 1),
-            include_post_pandemic_min=False,
+            include_post_pandemic_min=True,
+            event_anchor_dates=event_anchor_dates,
+            candidate_overrides=candidate_overrides,
         )
 
     fig.suptitle(
