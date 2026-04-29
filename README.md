@@ -148,10 +148,6 @@ O script carrega automaticamente a planilha mais recente em `data/YYYYMM/`, cons
 │   ├── 202603/
 │   │   ├── 202603_Tabelas_de_estatisticas_monetarias_e_de_credito.xlsx
 │   │   └── 202603_Texto_de_estatisticas_monetarias_e_de_credito.pdf
-│   └── sgs-estatisticas-de-credito-endividamento-das-familias/
-│       ├── tabelas-estatisticas-de-credito-endividamento-das-familias.csv
-│       ├── metodologia.md
-│       └── alreracoes-metodologicas/                           # boxes metodológicos do BCB
 ├── src/
 │   ├── download_bcb_release.py   # baixa a divulgação mensal do BCB (XLSX + PDF)
 │   ├── load_data.py     # carrega as séries do Excel
@@ -192,8 +188,6 @@ O script carrega automaticamente a planilha mais recente em `data/YYYYMM/`, cons
 
 ## 8. Estrutura e Fontes de Dados
 
-### 8.1. Fonte principal (construção do índice)
-
 Os arquivos mensais em **`data/YYYYMM/`** são a **fonte primária** para a construção do índice. Cada pasta mensal preserva o prefixo de competência `YYYYMM` usado pelo Banco Central no arquivo disponibilizado para download.
 
 Para cada competência, são armazenados dois arquivos:
@@ -213,19 +207,5 @@ python -m src.download_bcb_release YYYYMM
 - As observações mais recentes são marcadas com `*` na planilha, indicando **dados preliminares** sujeitos a revisão. Essas observações são incluídas no índice sem tratamento especial.
 
 **Identificação das séries dentro da planilha:** em cada aba, a **linha 7** contém o cabeçalho `SGS` com o número identificador de cada série no sistema SGS/BCB. Exemplo: a série **29034** está na célula **D7** da aba **`Tab 27`**.
-
-### 8.2. Fontes auxiliares (conferência e metodologia)
-
-As demais pastas em `data/` contêm dados obtidos **diretamente do SGS** ([https://www3.bcb.gov.br/sgspub](https://www3.bcb.gov.br/sgspub/localizarseries/localizarSeries.do?method=prepararTelaLocalizarSeries)), série a série, e servem como **referência auxiliar**:
-
-| Pasta | Finalidade |
-|---|---|
-| [`data/sgs-estatisticas-de-credito-endividamento-das-familias/`](data/sgs-estatisticas-de-credito-endividamento-das-familias/) | Dados brutos e documentação de metodologia da série de endividamento das famílias, obtidos diretamente da fonte (SGS/BCB) |
-
-Estas pastas são úteis para:
-
-1. **Conferência de consistência**: verificar se os dados da planilha principal estão alinhados com os dados brutos da fonte primária.
-2. **Sanamento de dúvidas metodológicas**: cada pasta contém documentação sobre a construção das séries (ex.: `metodologia.md`), alterações metodológicas históricas e notas técnicas.
-3. **Horizonte temporal estendido**: os dados do SGS podem cobrir períodos mais longos do que os disponíveis na planilha compilada.
 
 ---
